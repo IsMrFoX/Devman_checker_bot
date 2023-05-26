@@ -18,7 +18,7 @@ pip install -r requirements.txt
 
 3. Создайте файл `.env` в корневой директории проекта и добавьте в него следующие переменные окружения:
 
-```
+```Python
 TELEGRAM_BOT_TOKEN=<ваш_токен_бота_в_telegram>
 TELEGRAM_CHAT_ID=<ID_чата_в_telegram_для_отправки_уведомлений>
 AUTHORIZATION_DEVMAN_TOKEN=<ваш_токен_на_dvmn.org>
