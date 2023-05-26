@@ -35,8 +35,8 @@ def main():
             response = requests.get(url, headers=header, params=params, timeout=90)
             response.raise_for_status()
             content_last_attempt = response.json()
-            last_timestamp = content_last_attempt['last_attempt_timestamp']    
             if content_last_attempt['status'] == 'found':
+                last_timestamp = content_last_attempt['last_attempt_timestamp']    
                 lesson_title = content_last_attempt['new_attempts'][0]['lesson_title']
                 lesson_url = content_last_attempt['new_attempts'][0]['lesson_url']
                 success_text = 'Работа по: "<a href="{lesson_url}">{lesson_title}</a>" принята.'.format(
