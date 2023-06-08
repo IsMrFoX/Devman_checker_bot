@@ -3,10 +3,25 @@ import time
 import os
 import telegram
 import argparse
+import logging
+from logging.handlers import RotatingFileHandler
 from dotenv import load_dotenv
 
 
+def setup_logging():
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            RotatingFileHandler('devman_bot.log', maxBytes=300, backupCount=4),
+            logging.StreamHandler()
+        ]
+    )
+
 def main():
+    setup_logging()
+    logger = logging.getLogger(__name__)
+
     load_dotenv()
     telegram_bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
     bot = telegram.Bot(token=telegram_bot_token)
@@ -49,11 +64,14 @@ def main():
                 )
                 if not content_last_attempt['new_attempts'][0]['is_negative']:
                     bot.send_message(chat_id=chat_id, text=success_text, parse_mode=telegram.ParseMode.HTML)
+                    logger.info(f"Сообщение успешно отправлено: {success_text}")
                 else:
                     bot.send_message(chat_id=chat_id, text=error_text, parse_mode=telegram.ParseMode.HTML)
+                    logger.info(f"Сообщение успешно отправлено: {error_text}")
         except requests.exceptions.ReadTimeout:
             pass
-        except requests.exceptions.RequestException:
+        except requests.exceptions.RequestException as error:
+            logger.error(f"Ошибка запроса: {error}")
             time.sleep(5)
 
 
