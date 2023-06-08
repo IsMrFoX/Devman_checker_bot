@@ -5,6 +5,7 @@ import telegram
 import argparse
 import logging
 from logging.handlers import RotatingFileHandler
+import traceback
 from dotenv import load_dotenv
 
 
@@ -71,7 +72,9 @@ def main():
         except requests.exceptions.ReadTimeout:
             pass
         except requests.exceptions.RequestException as error:
-            logger.error(f"Ошибка запроса: {error}")
+            logger.exception("Ошибка запроса:")
+            error_message = f"Ошибка при выполнении запроса: {error}\n\n{traceback.format_exc()}"
+            bot.send_message(chat_id=chat_id, text=error_message)
             time.sleep(5)
 
 
