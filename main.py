@@ -9,20 +9,7 @@ import traceback
 from dotenv import load_dotenv
 
 
-def setup_logging():
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            RotatingFileHandler('devman_bot.log', maxBytes=300, backupCount=4),
-            logging.StreamHandler()
-        ]
-    )
-
 def main():
-    setup_logging()
-    logger = logging.getLogger(__name__)
-
     load_dotenv()
     telegram_bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
     bot = telegram.Bot(token=telegram_bot_token)
@@ -55,11 +42,11 @@ def main():
                 last_timestamp = content_last_attempt['last_attempt_timestamp']    
                 lesson_title = content_last_attempt['new_attempts'][0]['lesson_title']
                 lesson_url = content_last_attempt['new_attempts'][0]['lesson_url']
-                success_text = 'Работа по: "<a href="{lesson_url}">{lesson_title}</a>" принята.'.format(
+                success_text = 'Работа по: "<a href=\'{lesson_url}\'>{lesson_title}</a>" принята.'.format(
                     lesson_title=lesson_title,
                     lesson_url=lesson_url,
                 )
-                error_text = 'Работа по: "<a href="{lesson_url}">{lesson_title}</a>" отправлена на доработку.'.format(
+                error_text = 'Работа по: "<a href=\'{lesson_url}\'>{lesson_title}</a>" отправлена на доработку.'.format(
                     lesson_title=lesson_title,
                     lesson_url=lesson_url,
                 )
@@ -70,7 +57,8 @@ def main():
                     bot.send_message(chat_id=chat_id, text=error_text, parse_mode=telegram.ParseMode.HTML)
                     logger.info(f"Сообщение успешно отправлено: {error_text}")
         except requests.exceptions.ReadTimeout:
-            pass
+            time.sleep(5)
+            continue
         except requests.exceptions.RequestException as error:
             logger.exception("Ошибка запроса:")
             error_message = f"Ошибка при выполнении запроса: {error}\n\n{traceback.format_exc()}"
@@ -79,4 +67,15 @@ def main():
 
 
 if __name__ == "__main__":
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    handler = RotatingFileHandler('devman_bot.log', maxBytes=200*1024**2, backupCount=5)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.debug('Debug message')
+    logger.info('Info message')
+    logger.warning('Warning message')
+    logger.error('Error message')
+    logger.critical('Critical message')
     main()
