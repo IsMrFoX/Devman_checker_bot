@@ -9,8 +9,20 @@ import traceback
 from dotenv import load_dotenv
 
 
+class TelegramLogsHandler(logging.Handler):
+    def __init__(self, bot, chat_id):
+        super().__init__()
+        self.bot = bot
+        self.chat_id = chat_id
+
+    def emit(self, record):
+        log_entry = self.format(record)
+        self.bot.send_message(chat_id=self.chat_id, text=log_entry)
+
+
 def main():
     load_dotenv()
+    
     telegram_bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
     bot = telegram.Bot(token=telegram_bot_token)
     chat_id_env = os.getenv('TELEGRAM_CHAT_ID')
@@ -28,6 +40,12 @@ def main():
     header = {
         "Authorization": authorization_token
     }
+
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+
+    telegram_handler = TelegramLogsHandler(bot, chat_id)
+    logger.addHandler(telegram_handler)
 
     url = f'https://dvmn.org/api/long_polling/'
 
@@ -59,23 +77,10 @@ def main():
         except requests.exceptions.ReadTimeout:
             time.sleep(5)
             continue
-        except requests.exceptions.RequestException as error:
-            logger.exception("Ошибка запроса:")
-            error_message = f"Ошибка при выполнении запроса: {error}\n\n{traceback.format_exc()}"
-            bot.send_message(chat_id=chat_id, text=error_message)
+        except Exception as e:
+            logger.error('Произошла ошибка: %s', str(e), exc_info=True)
             time.sleep(5)
 
 
 if __name__ == "__main__":
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
-    handler = RotatingFileHandler('devman_bot.log', maxBytes=200*1024**2, backupCount=5)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    logger.debug('Debug message')
-    logger.info('Info message')
-    logger.warning('Warning message')
-    logger.error('Error message')
-    logger.critical('Critical message')
     main()
